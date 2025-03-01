@@ -1,24 +1,29 @@
 #!/bin/bash
 
-# 获取命令行传参中的 token 和 id
-TOKEN=$1
-CHAT_ID=$2
+# 检查 .bashrc 是否已经包含 TG_BOT_TOKEN 和 TG_CHAT_ID
+if grep -q "export TG_BOT_TOKEN" ~/.bashrc && grep -q "export TG_CHAT_ID" ~/.bashrc; then
+    echo "已找到现有的 Telegram 配置，将使用现有的 Token 和 Chat ID。"
+    # 从 .bashrc 获取 Token 和 Chat ID
+    source ~/.bashrc
+    TOKEN=$TG_BOT_TOKEN
+    CHAT_ID=$TG_CHAT_ID
+else
+    # 提示用户输入 Telegram Bot Token 和 Chat ID
+    echo "请输入 Telegram Bot Token（例如 123456789:ABCDEF1234567890ABCDEF1234567890）："
+    read TOKEN
 
-# 检查是否传入了 token 和 id 参数
-if [ -z "$TOKEN" ] || [ -z "$CHAT_ID" ]; then
-    echo "缺少 Telegram Bot Token 或 Chat ID，请提供 token 和 id。"
-    echo "使用格式: bash <(wget -qO- https://raw.githubusercontent.com/i-kirito/speedtest/main/install_speedtest.sh) <token> <id>"
-    exit 1
+    echo "请输入 Telegram Chat ID（例如 123456789）："
+    read CHAT_ID
+
+    # 将 Token 和 Chat ID 保存到 .bashrc
+    echo "export TG_BOT_TOKEN=$TOKEN" >> ~/.bashrc
+    echo "export TG_CHAT_ID=$CHAT_ID" >> ~/.bashrc
+    source ~/.bashrc
 fi
-
-# 将 token 和 id 保存到 .bashrc
-echo "export TG_BOT_TOKEN=$TOKEN" >> ~/.bashrc
-echo "export TG_CHAT_ID=$CHAT_ID" >> ~/.bashrc
-source ~/.bashrc
 
 # 更新并安装依赖
 echo "安装依赖..."
-apt update && apt install -y curl speedtest-cli bc
+apt update && apt install -y curl speedtest-cli
 
 # 创建 /root/speedtest.sh 脚本
 echo "创建 /root/speedtest.sh 脚本..."
@@ -40,37 +45,37 @@ log() {
 log "开始测速..."
 
 # 运行 Speedtest 并提取上传速度（单位：Mbps）
-SPEED=$(speedtest-cli --secure --simple | grep 'Upload' | awk '{print $2}')
+SPEED=\$(speedtest-cli --secure --simple | grep "Upload" | awk '{print \$2}')
 
 # 如果测速失败，则记录日志并退出
-if [ -z "$SPEED" ]; then
+if [ -z "\$SPEED" ]; then
     log "测速失败，SPEED 为空，可能是网络问题或 Speedtest 无法连接服务器。"
     exit 1
 fi
 
-log "测速成功，上传速度：$SPEED Mbps"
+log "测速成功，上传速度：\$SPEED Mbps"
 
 # 25MB/s = 250Mbps
 THRESHOLD=250
 
-# 使用 bc 进行浮点数计算时，设置 scale 来处理小数
-if (( $(echo "$SPEED < $THRESHOLD" | bc -l) )); then
-    MESSAGE=" 限速未解除，当前上传速度：$SPEED Mbps（低于 25MB/s）"
+# 判断上传速度是否超过 25MB/s（250Mbps）
+if (( \$(echo "\$SPEED < \$THRESHOLD" | bc -l) )); then
+    MESSAGE=" 限速未解除，当前上传速度：\$SPEED Mbps（低于 25MB/s）"
 else
-    MESSAGE=" 限速已解除，当前上传速度：$SPEED Mbps（高于 25MB/s）"
+    MESSAGE=" 限速已解除，当前上传速度：\$SPEED Mbps（高于 25MB/s）"
 fi
 
-log "发送 Telegram 通知：$MESSAGE"
+log "发送 Telegram 通知：\$MESSAGE"
 
 # 发送 Telegram 消息
-RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendMessage" \
-    -d "chat_id=$CHAT_ID" -d "text=$MESSAGE")
+RESPONSE=\$(curl -s -X POST "https://api.telegram.org/bot\$TOKEN/sendMessage" \
+    -d "chat_id=\$CHAT_ID" -d "text=\$MESSAGE")
 
 # 检查是否发送成功
-if [[ $RESPONSE == *'"ok":true'* ]]; then
+if [[ \$RESPONSE == *'"ok":true'* ]]; then
     log "Telegram 通知发送成功！"
 else
-    log "Telegram 通知发送失败！响应：$RESPONSE"
+    log "Telegram 通知发送失败！响应：\$RESPONSE"
 fi
 
 log "测速任务完成。"
@@ -79,30 +84,14 @@ EOF
 # 给 speedtest.sh 脚本增加可执行权限
 chmod +x /root/speedtest.sh
 
-# 创建 /root/speedtest_scheduler.sh 脚本，使用 sleep 定时执行
-echo "创建 /root/speedtest_scheduler.sh 脚本..."
-cat <<EOF > /root/speedtest_scheduler.sh
-#!/bin/bash
+# 设置定时任务，每小时的 0 分和 30 分执行一次
+echo "设置定时任务..."
+(crontab -l ; echo "0,30 * * * * /bin/bash /root/speedtest.sh") | crontab -
 
-while true; do
-    # 执行 /root/speedtest.sh 脚本
-    echo "开始执行 Speedtest..."
-    bash /root/speedtest.sh
-
-    # 每隔 30 分钟执行一次，但每 1 分钟输出一次等待时间
-    for ((i=1; i<=30; i++)); do
-        echo "等待 \$i 分钟..."
-        sleep 60  # 每次休眠 60 秒（1 分钟）
-    done
-done
-EOF
-
-# 给 speedtest_scheduler.sh 脚本增加可执行权限
-chmod +x /root/speedtest_scheduler.sh
-
-# 使用 nohup 在后台运行定时任务，并且重定向输出到日志文件
-echo "使用 nohup 在后台运行定时任务..."
-nohup bash /root/speedtest_scheduler.sh > /root/speedtest_scheduler.log 2>&1 &
+# 执行一次 speedtest 脚本
+echo "执行一次 speedtest 脚本..."
+bash /root/speedtest.sh
 
 # 提示完成
-echo "一键安装完成！Speedtest 脚本已创建并已启动定时任务。"
+
+echo "一键安装完成！Speedtest 脚本已创建并已配置定时任务。手动执行输入 bash /root/speedtest"
