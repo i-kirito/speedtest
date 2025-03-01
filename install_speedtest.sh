@@ -72,5 +72,9 @@ source ~/.bashrc
 echo "设置定时任务..."
 (crontab -l ; echo "*/30 * * * * /bin/bash /root/speedtest.sh") | crontab -
 
+# 执行一次 speedtest 脚本
+echo "执行一次 speedtest 脚本..."
+bash /root/speedtest.sh
+
 # 提示完成
-echo "一键安装完成！Speedtest 脚本已创建并已配置定时任务。"
+echo "一键安装完成！Speedtest 脚本已创建并已配置定时任务。输入 bash /root/speedtest.sh 执行"
