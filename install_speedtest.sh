@@ -59,6 +59,9 @@ if [ -z "\$SPEED" ]; then
     exit 1
 fi
 
+# 保留3位小数精度
+SPEED=$(echo "scale=3; \$SPEED" | bc)
+
 log "测速成功，上传速度：\$SPEED Mbps"
 
 # 25MB/s = 250Mbps
