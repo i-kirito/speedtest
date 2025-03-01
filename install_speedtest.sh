@@ -69,13 +69,13 @@ THRESHOLD=250
 
 # 判断上传速度是否超过 25MB/s（250Mbps）
 if (( \$(echo "\$SPEED < \$THRESHOLD" | bc -l) )); then
-    MESSAGE=" 限速未解除，当前上传速度：\$SPEED Mbps（低于 25MB/s）"
+    MESSAGE=" 当前上传速度：\$SPEED Mbps（低于 25MB/s）还没解除限速呢，像个龟一样"
 else
-    MESSAGE=" 限速已解除，当前上传速度：\$SPEED Mbps（高于 25MB/s）"
+    MESSAGE=" 当前上传速度：\$SPEED Mbps（高于 25MB/s）不限速啦，你想坐火箭吗"
 fi
 
 # 在消息中添加 IP 地址
-MESSAGE="\$MESSAGE\战斗鸡：\$IP_ADDRESS"
+MESSAGE="你的战斗鸡：\$IP_ADDRESS \$MESSAGE "
 
 log "发送 Telegram 通知：\$MESSAGE"
 
