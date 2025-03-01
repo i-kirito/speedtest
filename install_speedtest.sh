@@ -18,7 +18,7 @@ source ~/.bashrc
 
 # 更新并安装依赖
 echo "安装依赖..."
-apt update && apt install -y curl speedtest-cli
+apt update && apt install -y curl speedtest-cli bc
 
 # 创建 /root/speedtest.sh 脚本
 echo "创建 /root/speedtest.sh 脚本..."
@@ -100,9 +100,9 @@ EOF
 # 给 speedtest_scheduler.sh 脚本增加可执行权限
 chmod +x /root/speedtest_scheduler.sh
 
-# 使用 nohup 在后台运行定时任务，并且实时显示输出
+# 使用 nohup 在后台运行定时任务，并且重定向输出到日志文件
 echo "使用 nohup 在后台运行定时任务..."
-nohup bash /root/speedtest_scheduler.sh | tee -a /root/speedtest_scheduler.log &
+nohup bash /root/speedtest_scheduler.sh > /root/speedtest_scheduler.log 2>&1 &
 
 # 提示完成
 echo "一键安装完成！Speedtest 脚本已创建并已启动定时任务。"
