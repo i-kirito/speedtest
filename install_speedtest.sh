@@ -1,15 +1,16 @@
 #!/bin/bash
 
-# 检查是否传递了 Token 和 Chat ID
-if [ $# -lt 2 ]; then
-    echo "缺少参数，请提供 Telegram Bot Token 和 Chat ID。"
-    echo "用法: bash <(wget -qO- https://raw.githubusercontent.com/i-kirito/speedtest/refs/heads/main/install_speedtest.sh) <token> <id>"
+# 检查是否传递了 Token, Chat ID 和时间间隔
+if [ $# -lt 3 ]; then
+    echo "缺少参数，请提供 Telegram Bot Token、Chat ID 和定时器间隔时间（秒）。"
+    echo "用法: bash <(wget -qO- https://raw.githubusercontent.com/i-kirito/speedtest/main/install_speedtest.sh) <token> <id> <time>"
     exit 1
 fi
 
 # 获取命令行参数
 TOKEN=$1
 CHAT_ID=$2
+TIME_INTERVAL=$3
 
 # 检查依赖是否已安装
 echo "检查依赖..."
@@ -105,15 +106,15 @@ User=root
 WantedBy=multi-user.target
 EOF
 
-# 创建 systemd 定时器文件
+# 创建 systemd 定时器文件，并使用传递的时间间隔
 echo "创建 systemd 定时器文件..."
 cat <<EOF > /etc/systemd/system/speedtest.timer
 [Unit]
-Description=Run Speedtest every 30 minutes
+Description=Run Speedtest every ${TIME_INTERVAL} seconds
 
 [Timer]
-OnBootSec=10min
-OnUnitActiveSec=30min
+OnBootSec=10sec
+OnUnitActiveSec=${TIME_INTERVAL}sec
 
 [Install]
 WantedBy=timers.target
@@ -126,4 +127,4 @@ systemctl enable speedtest.timer
 systemctl start speedtest.timer
 
 # 提示完成
-echo "一键安装完成！Speedtest 脚本已创建并已配置 systemd 定时器，每 30 分钟执行一次。手动执行输入 bash /root/speedtest.sh"
+echo "一键安装完成！Speedtest 脚本已创建并已配置 systemd 定时器，每 ${TIME_INTERVAL} 秒执行一次。手动执行输入 bash /root/speedtest.sh"
