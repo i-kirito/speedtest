@@ -53,14 +53,11 @@ log "开始测速..."
 # 运行 Speedtest 并提取上传速度（单位：Mbps）
 SPEED=\$(speedtest-cli --secure --simple | grep "Upload" | awk '{print \$2}')
 
-# 检查 SPEED 是否为空
+# 如果测速失败，则记录日志并退出
 if [ -z "\$SPEED" ]; then
     log "测速失败，SPEED 为空，可能是网络问题或 Speedtest 无法连接服务器。"
     exit 1
 fi
-
-# 保留3位小数精度
-SPEED=$(echo "scale=3; \$SPEED" | bc)
 
 log "测速成功，上传速度：\$SPEED Mbps"
 
@@ -68,9 +65,7 @@ log "测速成功，上传速度：\$SPEED Mbps"
 THRESHOLD=250
 
 # 判断上传速度是否超过 25MB/s（250Mbps）
-COMPARE_RESULT=$(echo "\$SPEED < \$THRESHOLD" | bc)
-
-if [ "\$COMPARE_RESULT" -eq 1 ]; then
+if (( \$(echo "\$SPEED < \$THRESHOLD" | bc -l) )); then
     MESSAGE=" 限速未解除，当前上传速度：\$SPEED Mbps（低于 25MB/s）"
 else
     MESSAGE=" 限速已解除，当前上传速度：\$SPEED Mbps（高于 25MB/s）"
