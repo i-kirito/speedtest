@@ -55,6 +55,9 @@ log "测速成功，上传速度：\$SPEED Mbps"
 # 设置浮动精度，保留两位小数
 SPEED=$(echo "scale=2; $SPEED" | bc)
 
+# 输出调试信息
+log "处理后的上传速度：\$SPEED Mbps"
+
 # 25MB/s = 250Mbps
 THRESHOLD=250
 
