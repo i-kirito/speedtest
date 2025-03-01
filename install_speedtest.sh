@@ -1,17 +1,24 @@
 #!/bin/bash
 
+# 提示用户输入 Telegram Bot Token 和 Chat ID
+echo "请输入 Telegram Bot Token（例如 123456789:ABCDEF1234567890ABCDEF1234567890）："
+read TOKEN
+
+echo "请输入 Telegram Chat ID（例如 123456789）："
+read CHAT_ID
+
 # 更新并安装依赖
 echo "安装依赖..."
 apt update && apt install -y curl speedtest-cli
 
 # 创建 speedtest.sh 脚本
 echo "创建 /root/speedtest.sh 脚本..."
-cat <<'EOF' > /root/speedtest.sh
+cat <<EOF > /root/speedtest.sh
 #!/bin/bash 
 
 # 读取环境变量中的 Telegram 机器人 Token 和 Chat ID
-TOKEN=${TG_BOT_TOKEN}
-CHAT_ID=${TG_CHAT_ID}
+TOKEN=${TOKEN}
+CHAT_ID=${CHAT_ID}
 
 # 日志文件
 LOG_FILE="/root/speedtest.log"
@@ -64,17 +71,18 @@ EOF
 chmod +x /root/speedtest.sh
 
 # 写入 .bashrc 环境变量
-echo 'export TG_BOT_TOKEN="8173942885:AAF8dMJz_UfV651tr5Uw0GwkSYsN5X5EOaA"' >> ~/.bashrc
-echo 'export TG_CHAT_ID="5509078392"' >> ~/.bashrc
+echo "export TG_BOT_TOKEN=$TOKEN" >> ~/.bashrc
+echo "export TG_CHAT_ID=$CHAT_ID" >> ~/.bashrc
 source ~/.bashrc
 
-# 设置定时任务，30分钟执行一次
+# 设置定时任务，每小时的 0 分和 30 分执行一次
 echo "设置定时任务..."
-(crontab -l ; echo "*/30 * * * * /bin/bash /root/speedtest.sh") | crontab -
+(crontab -l ; echo "0,30 * * * * /bin/bash /root/speedtest.sh") | crontab -
 
 # 执行一次 speedtest 脚本
 echo "执行一次 speedtest 脚本..."
 bash /root/speedtest.sh
 
 # 提示完成
+
 echo "一键安装完成！Speedtest 脚本已创建并已配置定时任务。输入 bash /root/speedtest.sh 执行"
