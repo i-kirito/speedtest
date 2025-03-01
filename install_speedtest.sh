@@ -53,7 +53,7 @@ log "测速成功，上传速度：$SPEED Mbps"
 # 25MB/s = 250Mbps
 THRESHOLD=250
 
-# 判断上传速度是否超过 25MB/s（250Mbps）
+# 使用 bc 进行浮点数计算时，设置 scale 来处理小数
 if (( $(echo "$SPEED < $THRESHOLD" | bc -l) )); then
     MESSAGE=" 限速未解除，当前上传速度：$SPEED Mbps（低于 25MB/s）"
 else
