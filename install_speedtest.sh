@@ -39,8 +39,8 @@ log() {
 
 log "开始测速..."
 
-# 运行 Speedtest 并提取上传速度（单位：Mbps）
-SPEED=\$(speedtest-cli --secure --simple | grep "Upload" | awk '{print \$2}')
+# 运行 Speedtest 并提取上传速度（单位：Mbps），并通过 tee 显示实时输出
+speedtest-cli --secure --simple | tee -a \$LOG_FILE | grep -i 'upload' 
 
 # 如果测速失败，则记录日志并退出
 if [ -z "\$SPEED" ]; then
@@ -89,18 +89,20 @@ while true; do
     echo "开始执行 Speedtest..."
     bash /root/speedtest.sh
 
-    # 每隔 30 分钟执行一次
-    echo "等待 30 分钟..."
-    sleep 1800  # 1800 秒 = 30 分钟
+    # 每隔 30 分钟执行一次，但每 1 分钟输出一次等待时间
+    for ((i=1; i<=30; i++)); do
+        echo "等待 \$i 分钟..."
+        sleep 60  # 每次休眠 60 秒（1 分钟）
+    done
 done
 EOF
 
 # 给 speedtest_scheduler.sh 脚本增加可执行权限
 chmod +x /root/speedtest_scheduler.sh
 
-# 使用 nohup 在后台运行定时任务
+# 使用 nohup 在后台运行定时任务，并且实时显示输出
 echo "使用 nohup 在后台运行定时任务..."
-nohup bash /root/speedtest_scheduler.sh &
+nohup bash /root/speedtest_scheduler.sh | tee -a /root/speedtest_scheduler.log &
 
 # 提示完成
 echo "一键安装完成！Speedtest 脚本已创建并已启动定时任务。"
