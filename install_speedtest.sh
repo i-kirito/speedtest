@@ -1,25 +1,20 @@
 #!/bin/bash
 
-# 检查 .bashrc 是否已经包含 TG_BOT_TOKEN 和 TG_CHAT_ID
-if grep -q "export TG_BOT_TOKEN" ~/.bashrc && grep -q "export TG_CHAT_ID" ~/.bashrc; then
-    echo "已找到现有的 Telegram 配置，将使用现有的 Token 和 Chat ID。"
-    # 从 .bashrc 获取 Token 和 Chat ID
-    source ~/.bashrc
-    TOKEN=$TG_BOT_TOKEN
-    CHAT_ID=$TG_CHAT_ID
-else
-    # 提示用户输入 Telegram Bot Token 和 Chat ID
-    echo "请输入 Telegram Bot Token（例如 123456789:ABCDEF1234567890ABCDEF1234567890）："
-    read TOKEN
+# 获取命令行传参中的 token 和 id
+TOKEN=$1
+CHAT_ID=$2
 
-    echo "请输入 Telegram Chat ID（例如 123456789）："
-    read CHAT_ID
-
-    # 将 Token 和 Chat ID 保存到 .bashrc
-    echo "export TG_BOT_TOKEN=$TOKEN" >> ~/.bashrc
-    echo "export TG_CHAT_ID=$CHAT_ID" >> ~/.bashrc
-    source ~/.bashrc
+# 检查是否传入了 token 和 id 参数
+if [ -z "$TOKEN" ] || [ -z "$CHAT_ID" ]; then
+    echo "缺少 Telegram Bot Token 或 Chat ID，请提供 token 和 id。"
+    echo "使用格式: bash <(wget -qO- https://raw.githubusercontent.com/i-kirito/speedtest/main/install_speedtest.sh) <token> <id>"
+    exit 1
 fi
+
+# 将 token 和 id 保存到 .bashrc
+echo "export TG_BOT_TOKEN=$TOKEN" >> ~/.bashrc
+echo "export TG_CHAT_ID=$CHAT_ID" >> ~/.bashrc
+source ~/.bashrc
 
 # 更新并安装依赖
 echo "安装依赖..."
@@ -84,14 +79,28 @@ EOF
 # 给 speedtest.sh 脚本增加可执行权限
 chmod +x /root/speedtest.sh
 
-# 设置定时任务，每小时的 0 分和 30 分执行一次
-echo "设置定时任务..."
-(crontab -l ; echo "0,30 * * * * /bin/bash /root/speedtest.sh") | crontab -
+# 创建 /root/speedtest_scheduler.sh 脚本，使用 sleep 定时执行
+echo "创建 /root/speedtest_scheduler.sh 脚本..."
+cat <<EOF > /root/speedtest_scheduler.sh
+#!/bin/bash
 
-# 执行一次 speedtest 脚本
-echo "执行一次 speedtest 脚本..."
-bash /root/speedtest.sh
+while true; do
+    # 执行 /root/speedtest.sh 脚本
+    echo "开始执行 Speedtest..."
+    bash /root/speedtest.sh
+
+    # 每隔 30 分钟执行一次
+    echo "等待 30 分钟..."
+    sleep 1800  # 1800 秒 = 30 分钟
+done
+EOF
+
+# 给 speedtest_scheduler.sh 脚本增加可执行权限
+chmod +x /root/speedtest_scheduler.sh
+
+# 使用 nohup 在后台运行定时任务
+echo "使用 nohup 在后台运行定时任务..."
+nohup bash /root/speedtest_scheduler.sh &
 
 # 提示完成
-
-echo "一键安装完成！Speedtest 脚本已创建并已配置定时任务。手动执行输入 bash /root/speedtest"
+echo "一键安装完成！Speedtest 脚本已创建并已启动定时任务。"
