@@ -11,9 +11,24 @@ fi
 TOKEN=$1
 CHAT_ID=$2
 
-# 更新并安装依赖
-echo "安装依赖..."
-apt update && apt install -y curl speedtest-cli
+# 检查依赖是否已安装
+echo "检查依赖..."
+
+# 检查 curl 是否已安装
+if ! command -v curl &> /dev/null; then
+    echo "curl 未安装，正在安装..."
+    apt update && apt install -y curl
+else
+    echo "curl 已安装"
+fi
+
+# 检查 speedtest-cli 是否已安装
+if ! command -v speedtest-cli &> /dev/null; then
+    echo "speedtest-cli 未安装，正在安装..."
+    apt install -y speedtest-cli
+else
+    echo "speedtest-cli 已安装"
+fi
 
 # 创建 /root/speedtest.sh 脚本
 echo "创建 /root/speedtest.sh 脚本..."
