@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 检查是否传递了 Token、Chat ID 和 Time 参数
+# 检查是否传递了 Token, Chat ID 和时间间隔
 if [ $# -lt 3 ]; then
     echo "缺少参数，请提供 Telegram Bot Token、Chat ID 和定时器间隔时间（秒）。"
     echo "用法: bash <(wget -qO- https://raw.githubusercontent.com/i-kirito/speedtest/main/install_speedtest.sh) <token> <id> <time>"
@@ -10,22 +10,31 @@ fi
 # 获取命令行参数
 TOKEN=$1
 CHAT_ID=$2
-TIME=$3
+TIME_INTERVAL=$3
 
-# 验证时间参数是否为正整数
-if ! [[ "$TIME" =~ ^[0-9]+$ ]]; then
-    echo "无效的时间参数，请输入一个正整数作为定时器间隔（秒）。"
-    exit 1
+# 检查依赖是否已安装
+echo "检查依赖..."
+
+# 检查 curl 是否已安装
+if ! command -v curl &> /dev/null; then
+    echo "curl 未安装，正在安装..."
+    apt update && apt install -y curl
+else
+    echo "curl 已安装"
 fi
 
-# 更新并安装依赖
-echo "安装依赖..."
-apt update && apt install -y curl speedtest-cli
+# 检查 speedtest-cli 是否已安装
+if ! command -v speedtest-cli &> /dev/null; then
+    echo "speedtest-cli 未安装，正在安装..."
+    apt install -y speedtest-cli
+else
+    echo "speedtest-cli 已安装"
+fi
 
 # 创建 /root/speedtest.sh 脚本
 echo "创建 /root/speedtest.sh 脚本..."
 cat <<EOF > /root/speedtest.sh
-#!/bin/bash
+#!/bin/bash 
 
 # 读取传递的 Telegram 机器人 Token 和 Chat ID
 TOKEN=${TOKEN}
@@ -52,20 +61,14 @@ fi
 
 log "测速成功，上传速度：\$SPEED Mbps"
 
-# 设置浮动精度，保留两位小数
-SPEED=$(echo "scale=2; $SPEED" | bc)
-
-# 输出调试信息
-log "处理后的上传速度：\$SPEED Mbps"
-
 # 25MB/s = 250Mbps
 THRESHOLD=250
 
 # 判断上传速度是否超过 25MB/s（250Mbps）
-if (( $(echo "$SPEED < $THRESHOLD" | bc -l) )); then
-    MESSAGE="限速未解除，当前上传速度：\$SPEED Mbps（低于 25MB/s）"
+if (( \$(echo "\$SPEED < \$THRESHOLD" | bc -l) )); then
+    MESSAGE=" 限速未解除，当前上传速度：\$SPEED Mbps（低于 25MB/s）"
 else
-    MESSAGE="限速已解除，当前上传速度：\$SPEED Mbps（高于 25MB/s）"
+    MESSAGE=" 限速已解除，当前上传速度：\$SPEED Mbps（高于 25MB/s）"
 fi
 
 log "发送 Telegram 通知：\$MESSAGE"
@@ -103,15 +106,15 @@ User=root
 WantedBy=multi-user.target
 EOF
 
-# 创建 systemd 定时器文件，并设置间隔时间
+# 创建 systemd 定时器文件，并使用传递的时间间隔
 echo "创建 systemd 定时器文件..."
 cat <<EOF > /etc/systemd/system/speedtest.timer
 [Unit]
-Description=Run Speedtest every $TIME seconds
+Description=Run Speedtest every ${TIME_INTERVAL} seconds
 
 [Timer]
 OnBootSec=10sec
-OnUnitActiveSec=${TIME}sec
+OnUnitActiveSec=${TIME_INTERVAL}sec
 
 [Install]
 WantedBy=timers.target
@@ -124,4 +127,4 @@ systemctl enable speedtest.timer
 systemctl start speedtest.timer
 
 # 提示完成
-echo "一键安装完成！Speedtest 脚本已创建并已配置 systemd 定时器，每 $TIME 秒执行一次。手动执行输入 bash /root/speedtest.sh"
+echo "一键安装完成！Speedtest 脚本已创建并已配置 systemd 定时器，每 ${TIME_INTERVAL} 秒执行一次。手动执行输入 bash /root/speedtest.sh"
