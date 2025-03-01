@@ -51,7 +51,7 @@ log() {
 log "开始测速..."
 
 # 获取外网 IPv4 地址
-EXTERNAL_IP=\$(curl -s https://ifconfig.me)
+EXTERNAL_IP=\$(curl -s https://ipv4.ifconfig.me)
 
 log "外网IPv4地址：\$EXTERNAL_IP"
 
@@ -80,7 +80,7 @@ log "发送 Telegram 通知：\$MESSAGE"
 
 # 发送 Telegram 消息，包括外网 IP
 RESPONSE=\$(curl -s -X POST "https://api.telegram.org/bot\$TOKEN/sendMessage" \
-    -d "chat_id=\$CHAT_ID" -d "text=战斗鸡：\$EXTERNAL_IP\n\$MESSAGE")
+    -d "chat_id=\$CHAT_ID" -d "text=战斗鸡：\$EXTERNAL_IP\$MESSAGE")
 
 # 检查是否发送成功
 if [[ \$RESPONSE == *'"ok":true'* ]]; then
