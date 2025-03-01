@@ -50,10 +50,8 @@ log() {
 
 log "开始测速..."
 
-# 获取外网 IPv4 地址
-EXTERNAL_IP=\$(curl -s https://ipv4.ifconfig.me)
-
-log "外网IPv4地址：\$EXTERNAL_IP"
+# 获取 eth0 的 IPv4 地址
+IP_ADDRESS=\$(ip addr show eth0 | grep "inet " | awk '{print \$2}' | cut -d/ -f1)
 
 # 运行 Speedtest 并提取上传速度（单位：Mbps）
 SPEED=\$(speedtest-cli --secure --simple | grep "Upload" | awk '{print \$2}')
@@ -76,11 +74,14 @@ else
     MESSAGE=" 限速已解除，当前上传速度：\$SPEED Mbps（高于 25MB/s）"
 fi
 
+# 在消息中添加 IP 地址
+MESSAGE="\$MESSAGE\战斗鸡：\$IP_ADDRESS"
+
 log "发送 Telegram 通知：\$MESSAGE"
 
-# 发送 Telegram 消息，包括外网 IP
+# 发送 Telegram 消息
 RESPONSE=\$(curl -s -X POST "https://api.telegram.org/bot\$TOKEN/sendMessage" \
-    -d "chat_id=\$CHAT_ID" -d "text=战斗鸡：\$EXTERNAL_IP\$MESSAGE")
+    -d "chat_id=\$CHAT_ID" -d "text=\$MESSAGE")
 
 # 检查是否发送成功
 if [[ \$RESPONSE == *'"ok":true'* ]]; then
