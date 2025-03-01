@@ -50,6 +50,11 @@ log() {
 
 log "开始测速..."
 
+# 获取外网 IPv4 地址
+EXTERNAL_IP=\$(curl -s https://ifconfig.me)
+
+log "外网IPv4地址：\$EXTERNAL_IP"
+
 # 运行 Speedtest 并提取上传速度（单位：Mbps）
 SPEED=\$(speedtest-cli --secure --simple | grep "Upload" | awk '{print \$2}')
 
@@ -73,9 +78,9 @@ fi
 
 log "发送 Telegram 通知：\$MESSAGE"
 
-# 发送 Telegram 消息
+# 发送 Telegram 消息，包括外网 IP
 RESPONSE=\$(curl -s -X POST "https://api.telegram.org/bot\$TOKEN/sendMessage" \
-    -d "chat_id=\$CHAT_ID" -d "text=\$MESSAGE")
+    -d "chat_id=\$CHAT_ID" -d "text=战斗鸡：\$EXTERNAL_IP\n\$MESSAGE")
 
 # 检查是否发送成功
 if [[ \$RESPONSE == *'"ok":true'* ]]; then
