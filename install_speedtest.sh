@@ -53,7 +53,7 @@ log "开始测速..."
 # 运行 Speedtest 并提取上传速度（单位：Mbps）
 SPEED=\$(speedtest-cli --secure --simple | grep "Upload" | awk '{print \$2}')
 
-# 如果测速失败，则记录日志并退出
+# 检查 SPEED 是否为空
 if [ -z "\$SPEED" ]; then
     log "测速失败，SPEED 为空，可能是网络问题或 Speedtest 无法连接服务器。"
     exit 1
