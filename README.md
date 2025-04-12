@@ -6,7 +6,7 @@
 
 ### 使用方法
 - 一键安装脚本
-- `bash <(wget -qO- https://raw.githubusercontent.com/i-kirito/speedtest/main/install_speedtest.sh)  <token> <id> <time>`
+- `bash <(wget -qO- https://raw.githubusercontent.com/i-kirito/speedtest/main/install_speedtest.sh) <token> <id> <time>`
 - <token>为TG机器人token，@BotFather创建
 - <id>为TG用户ID，@get_id_bot获取
 - <time>为定时间隔时间，单位为秒
