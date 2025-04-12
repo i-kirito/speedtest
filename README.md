@@ -16,10 +16,13 @@
 
 - 相关代码
 
-systemctl start speedtest.timer   # 启动定时任务
-systemctl stop speedtest.timer    # 停止定时任务
-systemctl restart speedtest.timer # 重启定时任务
-systemctl status speedtest.timer  # 查看定时任务状态
+`systemctl start speedtest.timer   # 启动定时任务`
+
+`systemctl stop speedtest.timer    # 停止定时任务`
+
+`systemctl restart speedtest.timer # 重启定时任务`
+
+`systemctl status speedtest.timer  # 查看定时任务状态`
 
 `systemctl list-timers --all | grep speedtest.timer #查看下一次执行的时间`
 
